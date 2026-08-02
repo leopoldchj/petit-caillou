@@ -1,0 +1,11 @@
+{
+  "name": "petit-caillou",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix petit-caillou-web run dev --",
+    "build": "npm --prefix petit-caillou-web run build",
+    "lint": "npm --prefix petit-caillou-web run lint",
+    "preview": "npm --prefix petit-caillou-web run preview --"
+  }
+}
