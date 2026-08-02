@@ -1,0 +1,6 @@
+[submodule "petit-caillou-web"]
+	path = petit-caillou-web
+	url = https://github.com/leopoldchj/petit-caillou-web
+[submodule "petit-caillou-service"]
+	path = petit-caillou-service
+	url = https://github.com/leopoldchj/petit-caillou-service
