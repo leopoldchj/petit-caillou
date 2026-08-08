@@ -3,9 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix petit-caillou-web run dev --",
+    "setup": "npm --prefix petit-caillou-web install",
+    "db:up": "docker compose --env-file .env -f petit-caillou-service/compose.yaml up -d --wait",
+    "db:down": "docker compose --env-file .env -f petit-caillou-service/compose.yaml down",
+    "back": "dotenv -e .env --override -- sh -c 'cd petit-caillou-service && ./mvnw spring-boot:run'",
+    "front": "dotenv -e .env --override -- npm --prefix petit-caillou-web run dev",
+    "dev": "concurrently -k -n back,front -c blue,green \"npm run back\" \"npm run front\"",
+    "dev:local": "npm run db:up && npm run dev",
     "build": "npm --prefix petit-caillou-web run build",
     "lint": "npm --prefix petit-caillou-web run lint",
     "preview": "npm --prefix petit-caillou-web run preview --"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "dotenv-cli": "^11.0.0"
   }
 }
