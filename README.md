@@ -38,21 +38,40 @@ tracking branch, use:
 git submodule update --remote --recursive
 ```
 
-## Run the web application
+## Run with Docker (recommended)
 
-Install the web project dependencies once:
-
-```bash
-npm --prefix petit-caillou-web install
-```
-
-Then start the development server from this repository root:
+The whole stack — database, service, and web application — runs in containers.
+The only requirement is Docker.
 
 ```bash
-npm run dev
+docker compose up --build
 ```
 
-The application is available at `http://localhost:5173`.
+(or `npm run docker:up`). Once the containers are healthy:
+
+- Web application: `http://localhost:5173`
+- Service API: `http://localhost:8080`
+
+The web container serves the built app and reverse-proxies `/api` to the
+service, so both share a single origin (no CORS). The database is a MariaDB
+container; Flyway creates the schema on first start. Stop everything with
+`docker compose down` (or `npm run docker:down`).
+
+## Run locally (host toolchain)
+
+Useful for hot reload during development. Requires **JDK 21**, **Node**, and
+**Docker** (for the database only).
+
+```bash
+cp .env.example .env   # localhost defaults
+npm install            # root tooling (concurrently, dotenv-cli)
+npm run setup          # install web dependencies
+npm run dev:local      # MariaDB container + service + web, all together
+```
+
+- `npm run dev` runs the service and web app against the database configured in
+  `.env` (without starting the local container).
+- `npm run db:up` / `npm run db:down` manage the local MariaDB container.
 
 The `npm run build`, `npm run lint`, and `npm run preview` commands are also
 forwarded to the web project.

@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
     "setup": "npm --prefix petit-caillou-web install",
     "db:up": "docker compose --env-file .env -f petit-caillou-service/compose.yaml up -d --wait",
     "db:down": "docker compose --env-file .env -f petit-caillou-service/compose.yaml down",
