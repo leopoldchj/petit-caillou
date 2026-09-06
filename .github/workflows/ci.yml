@@ -1,0 +1,74 @@
+name: Integration
+
+# Runs the full test suite of every package against the exact submodule commits
+# pinned here. It fires whenever a submodule pointer moves (a bump), so the
+# combination that ships together is always verified as a whole.
+on:
+  push:
+    branches: [mainline]
+    paths:
+      - petit-caillou-service
+      - petit-caillou-web
+      - .github/workflows/ci.yml
+  pull_request:
+    paths:
+      - petit-caillou-service
+      - petit-caillou-web
+      - .github/workflows/ci.yml
+  workflow_dispatch: {}
+
+jobs:
+  backend:
+    name: Backend (pinned commit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # Private submodules need a token with read access to the other repos;
+          # the default GITHUB_TOKEN only sees this repository. Set a
+          # CI_SUBMODULE_TOKEN secret (PAT or app token) if checkout fails here.
+          token: ${{ secrets.CI_SUBMODULE_TOKEN || github.token }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Testcontainers provides its own MariaDB through Docker, preinstalled on
+      # GitHub-hosted Linux runners. No DB service or secret required.
+      - name: Run backend tests
+        working-directory: petit-caillou-service
+        run: ./mvnw -B -ntp verify
+
+  frontend:
+    name: Frontend (pinned commit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CI_SUBMODULE_TOKEN || github.token }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: petit-caillou-web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: petit-caillou-web
+        run: npm ci
+
+      - name: Lint
+        working-directory: petit-caillou-web
+        run: npm run lint
+
+      - name: Build
+        working-directory: petit-caillou-web
+        run: npm run build
