@@ -1,0 +1,52 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: petit-caillou-db
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-petit_caillou}
+      MARIADB_USER: ${DB_USERNAME:-petit_caillou}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-petit_caillou}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - db-data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./petit-caillou-service
+      dockerfile: ../docker/service.Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-petit_caillou}
+      DB_USERNAME: ${DB_USERNAME:-petit_caillou}
+      DB_PASSWORD: ${DB_PASSWORD:-petit_caillou}
+      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
+      SERVER_PORT: "8080"
+      # No default on purpose: production must inject a real secret (e.g. from
+      # a GitHub Actions secret). The dev fallback only applies to local runs.
+      JWT_SECRET: ${JWT_SECRET:-docker-compose-dev-secret-change-me-please-32b}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./petit-caillou-web
+      dockerfile: ../docker/web.Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
